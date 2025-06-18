@@ -85,24 +85,35 @@ public class Order {
     }
 
     public static void readOrders() {
-        String sql = "SELECT * FROM Orders";
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                Order o = new Order(
-                        rs.getInt("order_id"),
-                        rs.getDate("order_date"),
-                        rs.getString("customer_name"),
-                        rs.getString("status")
-                );
-                System.out.println(o);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+//        String sql = "SELECT * FROM Orders";
+//        try (Connection conn = DBConnection.getConnection();
+//             Statement stmt = conn.createStatement();
+//             ResultSet rs = stmt.executeQuery(sql)) {
+//
+//            System.out.printf("%-10s %-15s %-25s %-10s%n", "Order ID", "Order Date", "Customer Name", "Status");
+//            System.out.println("---------------------------------------------------------------");
+//
+//            while (rs.next()) {
+//                Order o = new Order(
+//                        rs.getInt("order_id"),
+//                        rs.getDate("order_date"),
+//                        rs.getString("customer_name"),
+//                        rs.getString("status")
+//                );
+//
+//                System.out.printf(
+//                        "%-10d %-15s %-25s %-10s%n",
+//                        o.getOrderId(),
+//                        o.getOrderDate().toString(), // or format if needed
+//                        o.getCustomerName(),
+//                        o.getStatus()
+//                );
+//            }
+//
+//
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
     }
 
     public static void updateOrderStatus(int orderId, String newStatus) {
@@ -135,7 +146,7 @@ public class Order {
     }
 
     // ------------ Optional main() for Testing ------------
-    public static void main(String[] args) {
+    public static void runOrder() {
         Scanner sc = new Scanner(System.in);
         System.out.println("Choose: 1-Create | 2-Read | 3-Update Status | 4-Delete");
         int choice = sc.nextInt();
@@ -143,6 +154,16 @@ public class Order {
 
         switch (choice) {
             case 1:
+                System.out.println("----Enter the Details----");
+                System.out.println("orderId: ");
+                int orderId = sc.nextInt();
+
+                System.out.println("customerName: ");
+                String custName = sc.next();
+
+                System.out.println("Status: ");  // make changes here
+                String status_default = "Pending";
+
                 Order newOrder = new Order(0, new Date(System.currentTimeMillis()), "John Doe", "Pending");
                 createOrder(newOrder);
                 break;

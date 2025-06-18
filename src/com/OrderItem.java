@@ -154,6 +154,7 @@ public class OrderItem {
 
         switch (choice) {
             case 1:
+
                 OrderItem item = new OrderItem(0, 1, 2, 3, 50.00); // sample values
                 createOrderItem(item);
                 break;

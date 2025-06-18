@@ -1,8 +1,12 @@
 package com;
 
 import com.utilities.DBConnection;
+import com.utilities.FileExport;
 
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class InventoryLog {
@@ -129,25 +133,65 @@ public class InventoryLog {
         }
     }
 
+//    public static void exportToFile(){
+//        FileExport fex = new FileExport("InventoryLog.txt");
+//
+//    }
+
+    public static void exportToFile() {
+        String sql = "SELECT * FROM inventorylog";
+        List<String> inventoryLogList = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+
+                Timestamp timestamp = rs.getTimestamp("timestamp");
+                String formattedTime = (timestamp != null)
+                        ? timestamp.toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        : "N/A";
+
+                String row = String.format("%d | %d | %d | %s | %s",
+                        rs.getInt("log_id"),
+                        rs.getInt("product_id"),
+                        rs.getInt("change_quantity"),
+                        rs.getString("action"),
+                        formattedTime);
+                inventoryLogList.add(row);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error fetching product data: " + e.getMessage());
+        }
+
+        FileExport fex = new FileExport(inventoryLogList ,"inventoryLog.txt");
+    }
+
+
+
     // ---------- Optional main() for testing ----------
-    public static void main(String[] args) {
+    public static void runInventoryLog() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("1-Create | 2-Read | 3-Delete");
+        System.out.println("1-Read | 2-Delete | 3-Export to File");
         int choice = sc.nextInt();
 
         switch (choice) {
             case 1:
-                InventoryLog log = new InventoryLog(0, 1, -5, "Shipped", null); // sample values
-                createLog(log);
-                break;
-            case 2:
                 readLogs();
                 break;
-            case 3:
+            case 2:
                 System.out.print("Enter Log ID to delete: ");
                 int delId = sc.nextInt();
                 deleteLog(delId);
                 break;
+            case 3:
+                exportToFile();
+                break;
+            default:
+                System.out.println("Invalid Input... Try again.");
+
         }
     }
 }

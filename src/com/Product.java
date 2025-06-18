@@ -2,6 +2,7 @@ package com;
 
 import com.utilities.DBConnection;
 
+import java.io.Console;
 import java.sql.*;
 import java.util.Scanner;
 
@@ -26,7 +27,6 @@ public class Product {
         this.stockQuantity = stockQuantity;
         this.supplierId = supplierId;
     }
-
 
 
     // Getters and Setters
@@ -94,7 +94,7 @@ public class Product {
     // ----------- JDBC CRUD METHODS BELOW -----------
 
     public static void createProduct(Product product) {
-        String sql = "INSERT INTO Product (name, description, price, supplier_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Product (name, description, price, stock_quantity, supplier_id) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -112,10 +112,15 @@ public class Product {
     }
 
     public static void readProducts() {
+        System.out.println("Reading products: ");
         String sql = "SELECT * FROM Product";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
+
+            System.out.printf("%-10s %-20s %-40s %-10s %-15s %-12s%n",
+                    "Product ID", "Name", "Description", "Price", "Stock Qty", "Supplier ID");
+            System.out.println("---------------------------------------------------------------------------------------------------------------");
 
             while (rs.next()) {
                 Product p = new Product(
@@ -126,7 +131,21 @@ public class Product {
                         rs.getInt("stock_quantity"),
                         rs.getInt("supplier_id")
                 );
-                System.out.println(p);
+
+                // Truncate long descriptions to avoid breaking the table
+                String desc = p.getDescription();
+                if (desc.length() > 37) {
+                    desc = desc.substring(0, 37) + "...";
+                }
+
+                System.out.printf("%-10d %-20s %-40s %-10.2f %-15d %-12d%n",
+                        p.getProductId(),
+                        p.getName(),
+                        desc,
+                        p.getPrice(),
+                        p.getStockQuantity(),
+                        p.getSupplierId()
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -161,15 +180,39 @@ public class Product {
     }
 
     // ------------- Optional: main() to test ---------------
-    public static void main(String[] args) {
+    public static void runProduct() {
         Scanner sc = new Scanner(System.in);
+//        Console console = System.console();
         System.out.println("Choose action: 1-Create | 2-Read | 3-Update Price | 4-Delete");
         int choice = sc.nextInt();
-        sc.nextLine();
+//        sc.nextLine();
 
         switch (choice) {
             case 1:
-                Product p = new Product(0, "New Mouse", "Bluetooth mouse", 29.99, 9, 1);
+                System.out.println("----Enter the Details----");
+                System.out.println("productId: ");
+                int productId = sc.nextInt();
+                sc.nextLine();
+
+                System.out.println("name: ");
+                String name_prod = sc.nextLine();
+
+                System.out.println("Description: ");
+                String description = sc.nextLine();
+
+                System.out.println("price: ");
+                double price = sc.nextDouble();
+                sc.nextLine();
+
+                System.out.println("stockQuantity: ");
+                int stockQuantity = sc.nextInt();
+                sc.nextLine();
+
+                System.out.println("supplierId: ");
+                int supplierId = sc.nextInt();
+                sc.nextLine();
+
+                Product p = new Product(productId, name_prod, description, price, stockQuantity, supplierId);
                 createProduct(p);
                 break;
             case 2:

@@ -90,6 +90,9 @@ public class Supplier {
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
+            System.out.printf("%-12s %-20s %-30s %-15s%n", "Supplier ID", "Name", "Email", "Phone");
+            System.out.println("----------------------------------------------------------------------------------------");
+
             while (rs.next()) {
                 Supplier s = new Supplier(
                         rs.getInt("supplier_id"),
@@ -97,7 +100,15 @@ public class Supplier {
                         rs.getString("contact_email"),
                         rs.getString("phone")
                 );
-                System.out.println(s);
+
+                // Print each row
+                System.out.printf(
+                        "%-12d %-20s %-30s %-15s%n",
+                        s.getSupplierId(),
+                        s.getName(),
+                        s.getContactEmail(),
+                        s.getPhone()
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -132,7 +143,7 @@ public class Supplier {
     }
 
     // ------------ Optional: main() for testing ------------
-    public static void main(String[] args) {
+    public static void runSupplier() {
         Scanner sc = new Scanner(System.in);
         System.out.println("Choose action: 1-Create | 2-Read | 3-Update | 4-Delete");
         int choice = sc.nextInt();
@@ -140,7 +151,20 @@ public class Supplier {
 
         switch (choice) {
             case 1:
-                Supplier s = new Supplier(0, "Scanner Supplier", "scanner@email.com", "9090909090");
+                System.out.println("----Enter the Details----");
+                System.out.println("supplierId: ");
+                int supplierId = sc.nextInt();
+
+                System.out.println("name: ");
+                String name = sc.next();
+
+                System.out.println("contactEmail: ");
+                String contactEmail = sc.next();
+
+                System.out.println("phone: ");
+                String phone = sc.next();
+
+                Supplier s = new Supplier(supplierId, name, contactEmail, phone);
                 createSupplier(s);
                 break;
             case 2:
