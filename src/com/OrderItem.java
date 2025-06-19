@@ -1,5 +1,7 @@
 package com;
 
+import com.exceptions.OrderNotFoundException;
+import com.exceptions.ProductNotFoundException;
 import com.utilities.DBConnection;
 
 import java.sql.*;
@@ -14,6 +16,14 @@ public class OrderItem {
 
     // Constructors
     public OrderItem() {
+    }
+
+    public OrderItem(int orderId, int productId, int quantity, double unitPrice) {
+//        this.orderItemId = orderItemId;
+        this.orderId = orderId;
+        this.productId = productId;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
     }
 
     public OrderItem(int orderItemId, int orderId, int productId, int quantity, double unitPrice) {
@@ -77,9 +87,48 @@ public class OrderItem {
                 '}';
     }
 
+    //---------CHECK IF ORDER EXISTS-------//
+    public static boolean orderExists(int orderId) {
+        String sql = "SELECT order_id FROM Orders WHERE order_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, orderId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    //----------IF PRODUCT EXISTS----------------
+    public static boolean productExists(int productId) {
+        String sql = "SELECT product_id FROM Product WHERE product_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // ---------- JDBC CRUD Methods ------------
 
-    public static void createOrderItem(OrderItem item) {
+    public static void createOrderItem(OrderItem item) throws OrderNotFoundException, ProductNotFoundException {
+
+//        if (!orderExists(item.getOrderId())) {
+//            throw new OrderNotFoundException("Order with ID " + item.getOrderId() + " does not exist.");
+//        }
+//
+//        if (!productExists(item.getProductId())) {
+//            throw new ProductNotFoundException("Product with ID " + item.getProductId() + " does not exist.");
+//        }
+
         String sql = "INSERT INTO OrderItem (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -90,7 +139,7 @@ public class OrderItem {
             stmt.setDouble(4, item.getUnitPrice());
 
             stmt.executeUpdate();
-            System.out.println("OrderItem inserted successfully.");
+//            System.out.println("OrderItem inserted successfully.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -117,20 +166,20 @@ public class OrderItem {
         }
     }
 
-    public static void updateQuantity(int orderItemId, int newQuantity) {
-        String sql = "UPDATE OrderItem SET quantity = ? WHERE order_item_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, newQuantity);
-            stmt.setInt(2, orderItemId);
-
-            int rows = stmt.executeUpdate();
-            System.out.println(rows + " row(s) updated.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void updateQuantity(int orderItemId, int newQuantity) {
+//        String sql = "UPDATE OrderItem SET quantity = ? WHERE order_item_id = ?";
+//        try (Connection conn = DBConnection.getConnection();
+//             PreparedStatement stmt = conn.prepareStatement(sql)) {
+//
+//            stmt.setInt(1, newQuantity);
+//            stmt.setInt(2, orderItemId);
+//
+//            int rows = stmt.executeUpdate();
+//            System.out.println(rows + " row(s) updated.");
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public static void deleteOrderItem(int orderItemId) {
         String sql = "DELETE FROM OrderItem WHERE order_item_id = ?";
@@ -147,28 +196,27 @@ public class OrderItem {
     }
 
     // ---------- Optional main() for testing ----------
-    public static void main(String[] args) {
+    public static void runOrderItem() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("1-Create | 2-Read | 3-Update Quantity | 4-Delete");
+        System.out.println("1-Read | 2-Delete");
         int choice = sc.nextInt();
 
         switch (choice) {
+//            case 1:
+//                OrderItem item = new OrderItem(0, 1, 2, 3, 50.00); // sample values
+//                createOrderItem(item);
+//                break;
             case 1:
-
-                OrderItem item = new OrderItem(0, 1, 2, 3, 50.00); // sample values
-                createOrderItem(item);
-                break;
-            case 2:
                 readOrderItems();
                 break;
-            case 3:
-                System.out.print("Enter OrderItem ID: ");
-                int id = sc.nextInt();
-                System.out.print("New Quantity: ");
-                int qty = sc.nextInt();
-                updateQuantity(id, qty);
-                break;
-            case 4:
+//            case 3:
+//                System.out.print("Enter OrderItem ID: ");
+//                int id = sc.nextInt();
+//                System.out.print("New Quantity: ");
+//                int qty = sc.nextInt();
+//                updateQuantity(id, qty);
+//                break;
+            case 2:
                 System.out.print("Enter OrderItem ID to delete: ");
                 int delId = sc.nextInt();
                 deleteOrderItem(delId);

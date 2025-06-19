@@ -179,6 +179,70 @@ public class Product {
         }
     }
 
+    public static Product getProductById(int productId) {
+        String sql = "SELECT * FROM Product WHERE product_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return new Product(
+                        rs.getInt("product_id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getDouble("price"),
+                        rs.getInt("stock_quantity"),
+                        rs.getInt("supplier_id")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Get current stock for a product
+    public static int getProductStock(Connection conn, int productId) throws SQLException {
+        String sql = "SELECT stock_quantity FROM Product WHERE product_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, productId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("stock_quantity");
+                }
+            }
+        }
+        throw new SQLException("Product not found: " + productId);
+    }
+
+    // Update product stock
+    public static void updateProductStock(Connection conn, int productId, int newStock) throws SQLException {
+        String sql = "UPDATE Product SET stock_quantity = ? WHERE product_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, newStock);
+            stmt.setInt(2, productId);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Ensure product exists with initial stock
+    public static void ensureProductExists(int productId, int initialStock) {
+        String sql = "INSERT INTO Product (product_id, name, description, price, stock_quantity, supplier_id) " +
+                "VALUES (?, 'Test Product', 'Test Description', 9.99, ?, 1) " +
+                "ON DUPLICATE KEY UPDATE stock_quantity = VALUES(stock_quantity)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, productId);
+            stmt.setInt(2, initialStock);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Failed to ensure product existence: " + e.getMessage());
+        }
+    }
+
     // ------------- Optional: main() to test ---------------
     public static void runProduct() {
         Scanner sc = new Scanner(System.in);

@@ -23,6 +23,13 @@ public class Supplier {
         this.phone = phone;
     }
 
+    public Supplier(String name, String contactEmail, String phone) {
+//        this.supplierId = supplierId;
+        this.name = name;
+        this.contactEmail = contactEmail;
+        this.phone = phone;
+    }
+
     // Getters and Setters
     public int getSupplierId() {
         return supplierId;
@@ -67,8 +74,7 @@ public class Supplier {
                 '}';
     }
 
-    // ----------- JDBC CRUD OPERATIONS BELOW -----------
-
+    //CRUD METHODS
     public static void createSupplier(Supplier supplier) {
         String sql = "INSERT INTO Supplier (name, contact_email, phone) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
@@ -142,47 +148,110 @@ public class Supplier {
         }
     }
 
-    // ------------ Optional: main() for testing ------------
+    //Input validation and menu
     public static void runSupplier() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("Choose action: 1-Create | 2-Read | 3-Update | 4-Delete");
-        int choice = sc.nextInt();
-        sc.nextLine();
+        int choice = -1;
+        boolean validInput = false;
+
+        while (!validInput) {
+            System.out.println("Choose action: 1-Create | 2-Read | 3-Update | 4-Delete | 5-Exit");
+            String input = sc.nextLine();
+
+            if (input.trim().isEmpty()) {
+                System.out.println("Input cannot be empty. Please enter a number between 1 and 5.");
+                continue;
+            }
+
+            if (input.matches("[a-zA-Z]+")) {
+                System.out.println("Invalid input Type. Please enter an Integer between 1 and 5.");
+                continue;
+            }
+
+            try {
+                choice = Integer.parseInt(input);
+                if (choice < 1 || choice > 5) {
+                    System.out.println("Invalid input. Please choose between 1 and 5.");
+                } else {
+                    validInput = true;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+            }
+        }
 
         switch (choice) {
-            case 1:
-                System.out.println("----Enter the Details----");
-                System.out.println("supplierId: ");
-                int supplierId = sc.nextInt();
+            case 1 -> {
+                System.out.println("---- Enter Supplier Details ----");
 
-                System.out.println("name: ");
-                String name = sc.next();
+//                int supplierId;
+//                while (true) {
+//                    System.out.print("supplierId: ");
+//                    String idStr = sc.nextLine();
+//                    try {
+//                        supplierId = Integer.parseInt(idStr);
+//                        break;
+//                    } catch (NumberFormatException e) {
+//                        System.out.println("Invalid ID. Please enter a number.");
+//                    }
+//                }
 
-                System.out.println("contactEmail: ");
-                String contactEmail = sc.next();
+                System.out.print("name: ");
+                String name = sc.nextLine();
 
-                System.out.println("phone: ");
-                String phone = sc.next();
+                System.out.print("contactEmail: ");
+                String contactEmail = sc.nextLine();
 
-                Supplier s = new Supplier(supplierId, name, contactEmail, phone);
+
+                System.out.print("phone: ");
+                String phone = sc.nextLine();
+
+                while(phone.length() != 10){
+                    System.out.print("Enter valid phone number(10 digits): ");
+                    phone = sc.nextLine();
+                }
+
+                Supplier s = new Supplier(name, contactEmail, phone);
                 createSupplier(s);
-                break;
-            case 2:
-                readSuppliers();
-                break;
-            case 3:
-                System.out.print("Enter supplier ID to update: ");
-                int updateId = sc.nextInt();
-                sc.nextLine();
+            }
+
+            case 2 -> readSuppliers();
+
+            case 3 -> {
+                int updateId;
+                while (true) {
+                    System.out.print("Enter supplier ID to update: ");
+                    String idStr = sc.nextLine();
+                    try {
+                        updateId = Integer.parseInt(idStr);
+                        break;
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid ID. Please enter a number.");
+                    }
+                }
+
                 System.out.print("Enter new name: ");
                 String newName = sc.nextLine();
                 updateSupplier(updateId, newName);
-                break;
-            case 4:
-                System.out.print("Enter supplier ID to delete: ");
-                int deleteId = sc.nextInt();
+            }
+
+            case 4 -> {
+                int deleteId;
+                while (true) {
+                    System.out.print("Enter supplier ID to delete: ");
+                    String idStr = sc.nextLine();
+                    try {
+                        deleteId = Integer.parseInt(idStr);
+                        break;
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid ID. Please enter a number.");
+                    }
+                }
+
                 deleteSupplier(deleteId);
-                break;
+            }
+
+            case 5 -> System.out.println("Exiting Supplier Management.");
         }
     }
 }

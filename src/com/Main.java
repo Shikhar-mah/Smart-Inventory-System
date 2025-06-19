@@ -2,11 +2,14 @@ package com;
 
 //import com.utilities.InventorySimulator;
 
+import com.exceptions.OrderNotFoundException;
+import com.exceptions.ProductNotFoundException;
+
 import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws SQLException, InterruptedException, OrderNotFoundException, ProductNotFoundException {
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
 
@@ -23,12 +26,21 @@ public class Main {
 
             int choice = scanner.nextInt();
             switch (choice) {
-                case 1 -> Supplier.runSupplier(); //manageSuppliers(scanner);
-                case 2 -> Product.runProduct(); //manageProducts(scanner);
-                case 3 -> Order.runOrder();//manageOrders(scanner);
-                case 4 -> manageOrderItems(scanner);
+                case 1 -> Supplier.runSupplier();
+                case 2 -> Product.runProduct();
+                case 3 -> Order.runOrder();
+                case 4 -> OrderItem.runOrderItem();
                 case 5 -> InventoryLog.runInventoryLog();
                 case 6 -> System.out.println("Inventory Simulator is done here."); // InventorySimulator.main(null); // launch concurrent simulation
+//                case 7 -> {
+//                    Product product = new Product(101, "Coffee", "Freshly brewed", 150.0, 5, 1);
+//                    try {
+//                        product.sellProduct(7);
+//                        System.out.println("Product sold successfully!");
+//                    } catch (OutOfStockException e) {
+//                        System.out.println(" Error: " + e.getMessage());
+//                    }
+//                }
                 case 0 -> running = false;
                 default -> System.out.println("Invalid option. Try again.");
             }

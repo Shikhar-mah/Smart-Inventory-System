@@ -83,11 +83,9 @@ public class InventoryLog {
 
     // ---------- JDBC CRUD Methods ------------
 
-    public static synchronized void createLog(InventoryLog log) {
+    public static synchronized void createLog(Connection conn, InventoryLog log) {
         String sql = "INSERT INTO InventoryLog (product_id, change_quantity, action) VALUES (?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) { // ✅ Use existing connection
             stmt.setInt(1, log.getProductId());
             stmt.setInt(2, log.getChangeQuantity());
             stmt.setString(3, log.getAction());
@@ -121,16 +119,16 @@ public class InventoryLog {
     }
 
     public static void deleteLog(int logId) {
-        String sql = "DELETE FROM InventoryLog WHERE log_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, logId);
-            int rows = stmt.executeUpdate();
-            System.out.println(rows + " row(s) deleted.");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+//        String sql = "DELETE FROM InventoryLog WHERE log_id = ?";
+//        try (Connection conn = DBConnection.getConnection();
+//             PreparedStatement stmt = conn.prepareStatement(sql)) {
+//
+//            stmt.setInt(1, logId);
+//            int rows = stmt.executeUpdate();
+//            System.out.println(rows + " row(s) deleted.");
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
     }
 
 //    public static void exportToFile(){
@@ -174,19 +172,19 @@ public class InventoryLog {
     // ---------- Optional main() for testing ----------
     public static void runInventoryLog() {
         Scanner sc = new Scanner(System.in);
-        System.out.println("1-Read | 2-Delete | 3-Export to File");
+        System.out.println("1-Read | 2-Export to File");
         int choice = sc.nextInt();
 
         switch (choice) {
             case 1:
                 readLogs();
                 break;
+//            case 2:
+//                System.out.print("Enter Log ID to delete: ");
+//                int delId = sc.nextInt();
+//                deleteLog(delId);
+//                break;
             case 2:
-                System.out.print("Enter Log ID to delete: ");
-                int delId = sc.nextInt();
-                deleteLog(delId);
-                break;
-            case 3:
                 exportToFile();
                 break;
             default:
