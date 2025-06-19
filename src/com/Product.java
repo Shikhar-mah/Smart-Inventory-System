@@ -28,6 +28,17 @@ public class Product {
         this.supplierId = supplierId;
     }
 
+    public Product(String name, String description, double price, int stockQuantity, int supplierId) {
+//        this.productId = productId;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
+        this.supplierId = supplierId;
+    }
+
+
+
 
     // Getters and Setters
     public int getProductId() {
@@ -102,7 +113,7 @@ public class Product {
             stmt.setString(2, product.getDescription());
             stmt.setDouble(3, product.getPrice());
             stmt.setInt(4, product.getStockQuantity());
-            stmt.setInt(4, product.getSupplierId());
+            stmt.setInt(5, product.getSupplierId());
 
             stmt.executeUpdate();
             System.out.println("Product created successfully.");
@@ -217,13 +228,26 @@ public class Product {
     }
 
     // Update product stock
-    public static void updateProductStock(Connection conn, int productId, int newStock) throws SQLException {
+    public static synchronized void updateProductStock(Connection conn, int productId, int newStock) throws SQLException {
         String sql = "UPDATE Product SET stock_quantity = ? WHERE product_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, newStock);
             stmt.setInt(2, productId);
             stmt.executeUpdate();
         }
+    }
+
+    // New method to sell product, handles stock decrement and can be called by concurrent threads
+    public synchronized void sellProduct(Connection conn, int quantityToSell) throws SQLException { // ADDED METHOD
+        int currentStock = getProductStock(conn, this.productId);
+        if (currentStock < quantityToSell) {
+            System.out.println("Not enough stock for product " + this.name + ". Current: " + currentStock + ", Requested: " + quantityToSell);
+            throw new SQLException("Out of Stock for product ID: " + this.productId);
+        }
+        int newStock = currentStock - quantityToSell;
+        updateProductStock(conn, this.productId, newStock);
+        this.setStockQuantity(newStock); // Update the object's stockQuantity
+        System.out.println("Product " + this.name + " stock updated to: " + newStock);
     }
 
     // Ensure product exists with initial stock
@@ -243,20 +267,51 @@ public class Product {
         }
     }
 
+    //Checking low stock
+    public static void checkLowStock(int threshold) {
+        String sql = "SELECT * FROM Product WHERE stock_quantity < ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, threshold);
+            ResultSet rs = stmt.executeQuery();
+
+            System.out.println("\n⚠️ Low Stock Products (Below " + threshold + " units):");
+            System.out.printf("%-10s %-20s %-10s%n", "Product ID", "Name", "Stock");
+            System.out.println("-------------------------------------------");
+
+            boolean found = false;
+            while (rs.next()) {
+                found = true;
+                System.out.printf("%-10d %-20s %-10d%n",
+                        rs.getInt("product_id"),
+                        rs.getString("name"),
+                        rs.getInt("stock_quantity"));
+            }
+
+            if (!found) {
+                System.out.println("✅ All products have sufficient stock.");
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error checking low stock: " + e.getMessage());
+        }
+    }
+
     // ------------- Optional: main() to test ---------------
     public static void runProduct() {
         Scanner sc = new Scanner(System.in);
 //        Console console = System.console();
-        System.out.println("Choose action: 1-Create | 2-Read | 3-Update Price | 4-Delete");
+        System.out.println("Choose action: 1-Create | 2-Read | 3-Update Price | 4-Delete | 5-Check for Low Stock");
         int choice = sc.nextInt();
 //        sc.nextLine();
 
         switch (choice) {
             case 1:
                 System.out.println("----Enter the Details----");
-                System.out.println("productId: ");
-                int productId = sc.nextInt();
-                sc.nextLine();
+//                System.out.println("productId: ");
+//                int productId = sc.nextInt();
+//                sc.nextLine();
 
                 System.out.println("name: ");
                 String name_prod = sc.nextLine();
@@ -276,7 +331,7 @@ public class Product {
                 int supplierId = sc.nextInt();
                 sc.nextLine();
 
-                Product p = new Product(productId, name_prod, description, price, stockQuantity, supplierId);
+                Product p = new Product(name_prod, description, price, stockQuantity, supplierId);
                 createProduct(p);
                 break;
             case 2:
@@ -293,6 +348,14 @@ public class Product {
                 System.out.print("Enter product ID to delete: ");
                 int deleteId = sc.nextInt();
                 deleteProduct(deleteId);
+                break;
+            case 5:
+                System.out.print("Enter stock threshold: ");
+                System.out.println("Stock less than 5: ");
+//                int threshold = sc.nextInt();
+//                checkLowStock(threshold);
+                checkLowStock(5);
+
                 break;
         }
     }

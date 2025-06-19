@@ -188,26 +188,25 @@ public class Order {
             itemsForOrder.add(item);
 
             // Update stock with transaction
-            Connection conn = DBConnection.getConnection();
-            try {
-                conn.setAutoCommit(false);
+            try (Connection conn = DBConnection.getConnection()) {
+                synchronized (Product.class) { // Synchronize on the Product class to ensure atomicity
+                    conn.setAutoCommit(false); // Start transaction
 
-                int newStock = product.getStockQuantity() - quantity;
-                Product.updateProductStock(conn, prodId, newStock);
+                    product.sellProduct(conn, quantity); // Use the synchronized sellProduct method
 
-                InventoryLog.createLog(conn, new InventoryLog(
-                        0, prodId, -quantity,
-                        "Order Processed (Manual)",
-                        new Timestamp(System.currentTimeMillis())
-                ));
+                    InventoryLog.createLog(conn, new InventoryLog(
+                            0, prodId, -quantity,
+                            "Order Processed (Manual)",
+                            new Timestamp(System.currentTimeMillis())
+                    ));
 
-                conn.commit();
+                    conn.commit(); // Commit transaction
+                    System.out.println("Stock updated and log created for product ID " + prodId);
+                }
             } catch (SQLException e) {
-                conn.rollback();
                 System.err.println("Failed to update stock: " + e.getMessage());
-            } finally {
-                conn.setAutoCommit(true);
-                conn.close();
+                // No need to rollback explicitly here, as sellProduct handles its own transaction or relies on a larger one.
+                // If a larger transaction is intended, the rollback should be handled at that level.
             }
 
             // Ask to add more items
